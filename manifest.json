@@ -19,6 +19,7 @@
       ],
       "js": [
         "js/jquery-3.4.1.slim.min.js",
+        "Modules.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -26,6 +27,7 @@
   ],
   "background": {
     "scripts": [
+      "Modules.js",
       "background.js"
     ],
     "persistent": true

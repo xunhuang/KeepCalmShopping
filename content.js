@@ -1,4 +1,5 @@
 
+/*
 async function getOptionFromStorage(storage_key) {
   const data = await new Promise(resolve => {
     chrome.storage.sync.get(storage_key, function (result) {
@@ -13,14 +14,26 @@ async function getServerResults(url) {
   return await response.text(); // there's response.json() as well
 }
 
-let WaitSeconds = 5;
 
 const Module = {
   Costco: {
     name: 'Costco',
     proccesor: processCostco,
     monitorSetting: "monitorCostco",
+  },
+  AmazonWholeFoods: {
+    name: 'AmazonWholeFoods',
+    proccesor: processAmazonWholeFoods,
+    monitorSetting: "monitorAmazonWholeFoods",
   }
+}
+
+async function processAmazonWholeFoods() {
+  let result;
+  console.log('Checking Whole Foods');
+  let AmazonWholeFoodsDeliveryURL = await getOptionFromStorage("AmazonWholeFoodsDeliveryURL");
+  result = await getServerResults(AmazonWholeFoodsDeliveryURL);
+  return result;
 }
 
 async function processCostco() {
@@ -35,9 +48,14 @@ function whichModule(url) {
   if (url.startsWith("https://sameday.costco.com/store/checkout")) {
     return Module.Costco;
   }
+  if (url.startsWith("https://www.amazon.com/gp/buy/shipoptionselect/handlers/display.html")) {
+    return Module.AmazonWholeFoods;
+  }
   return null;
 }
+*/
 
+let WaitSeconds = 5;
 (async function () {
   console.log("content.js -- started " + window.location.href)
   let timeout = 1000 * WaitSeconds; // turn into a config later

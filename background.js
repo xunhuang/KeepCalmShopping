@@ -7,6 +7,11 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         CostcoDeliveryURL: details.url
       });
     }
+    if (details.url.includes("https://www.amazon.com/gp/buy/shipoptionselect/handlers/display.html")) {
+      chrome.storage.sync.set({
+        AmazonWholeFoodsDeliveryURL: details.url
+      });
+    }
     return {
       requestHeaders: details.requestHeaders
     };
@@ -20,15 +25,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   ["requestHeaders"]
 );
 
-async function getOptionFromStorage(storage_key) {
-  const data = await new Promise(resolve => {
-    chrome.storage.sync.get(storage_key, function (result) {
-      resolve(result);
-    });
-  });
-  return data[storage_key];
-}
-
 async function sendNotification(message) {
   let phone = await getOptionFromStorage("userPhone");
   const url = "https://us-central1-covid-19-live.cloudfunctions.net/datajsonNew?";
@@ -39,20 +35,19 @@ async function sendNotification(message) {
   const text = await response.text(); // there's response.json() as well
   console.log(text);
 }
-
-var CostcoFound = false;
-
 chrome.runtime.onMessage.addListener(
   async function (request, sender, sendResponse) {
-    if (request.module == "Costco") {
+    let module = Module[request.module];
+    if (module) {
+      console.log(module);
       if (request.command == "monitor") {
-        let monitorCostco = await getOptionFromStorage("monitorCostco");
-        if (!monitorCostco) {
-          console.log("Monitor costco is off.")
+        let monitorSetting = await getOptionFromStorage(module.monitorSetting);
+        if (!monitorSetting) {
+          console.log(`Monitor ${module.name} is off.`)
           return;
         }
         let found = false;
-        let availdays = CostcoAvailableDays(request.content);
+        let availdays = module.availableSlots(request.content);
         if (availdays.length > 0) {
           console.log("available!");
           console.log(availdays);
@@ -61,50 +56,25 @@ chrome.runtime.onMessage.addListener(
           console.log("Not available, be patient");
           found = false
         }
-
-        if (found !== CostcoFound) {
+        if (found !== module.FoundState) {
           if (found) {
             let dates = availdays.map(d => d.date).join(", ");
-            sendNotification(`Check Costco! ${availdays.length} days have slots. ` + dates);
+            sendNotification(`Check ${module.name} ${availdays.length} slots. ` + dates);
           } else {
-            sendNotification(`Costco slots are gone!`);
+            sendNotification(`${module.name} slots are gone!`);
           }
-          CostcoFound = found;
+          module.FoundState = found;
         }
       } else if (request.command == "reset") {
-        let monitorCostco = await getOptionFromStorage("monitorCostco");
-        if (monitorCostco) {
-          console.log(`Monitor costco has started!`);
-          sendNotification(`Monitor costco has started.`);
+        let monitorSetting = await getOptionFromStorage(module.monitorSetting);
+        if (monitorSetting) {
+          console.log(`${module.name} monitoring has started!`);
+          sendNotification(`${module.name} monitoring has started.`);
         } else {
-          console.log(`Monitor costco has been turned off!`);
-          sendNotification(`Monitor costco is turned off.`);
+          console.log(`${module.name} monitoring turned off!`);
+          sendNotification(`${module.name} monitoring is turned off.`);
         }
-        CostcoFound = false;
+        module.FoundState = false;
       }
     }
   });
-
-function CostcoAvailableDays(data) {
-  let result = [];
-  try {
-    let r = JSON.parse(data);
-    let days = r.service_options.days;
-    for (let day of days) {
-      if (day.message === null) {
-        result.push(day);
-        continue;
-      }
-      let flatmessage = day.message.map(msgarray => {
-        return msgarray.strings.map(msg => msg.value).join();
-      }).join();
-      if (!flatmessage.toLowerCase().includes("sorry")) {
-        result.push(day);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-    return [];
-  }
-  return result;
-}
