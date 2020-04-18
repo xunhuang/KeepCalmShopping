@@ -58,7 +58,7 @@ chrome.runtime.onMessage.addListener(
         }
         if (found !== module.FoundState) {
           if (found) {
-            let dates = availdays.map(d => d.date).join(", ");
+            let dates = module.prettyMessageFromSlots(availdays);
             sendNotification(`Check ${module.name} ${availdays.length} slots. ` + dates);
           } else {
             sendNotification(`${module.name} slots are gone!`);

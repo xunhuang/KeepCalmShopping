@@ -24,8 +24,8 @@ async function processCostco() {
 async function processAmazonWholeFoods() {
     let result;
     console.log('Checking Whole Foods');
-    let AmazonWholeFoodsDeliveryURL = await getOptionFromStorage("AmazonWholeFoodsDeliveryURL");
-    result = await getServerResults(AmazonWholeFoodsDeliveryURL);
+    let url = "https://www.amazon.com/gp/buy/shipoptionselect/handlers/display.html";
+    result = await getServerResults(url);
     return result;
 }
 
@@ -69,30 +69,33 @@ function CostcoPrettyMessage(slots) {
 
 function AmazonAvailableDays(data) {
     let result = [];
-    try {
-        let r = JSON.parse(data);
-        let days = r.service_options.days;
-        for (let day of days) {
-            if (day.message === null) {
-                result.push(day);
-                continue;
-            }
-            let flatmessage = day.message.map(msgarray => {
-                return msgarray.strings.map(msg => msg.value).join();
-            }).join();
-            if (!flatmessage.toLowerCase().includes("sorry")) {
-                result.push(day);
+    const $ = cheerio.load(data);
+    let days = $("div.ufss-slotselect");
+    days.map(s => {
+        let day = days[s];
+        let daystr = day.attribs.id;
+        let slots = [];
+        let slots1 = cheerio(day, ".ufss-available");
+        slots1.map(s => slots.push(slots1[s]));
+        let slots2 = cheerio(day, "ul.ufss-slot-list li.ufss-slot-container");
+        slots2.map(s => slots.push(slots2[s]));
+
+        for (let slot of slots) {
+            let html = cheerio(slot).text();
+            html = html.replace(/  +/g, ' ')
+                .replace(/^\s*$(?:\r\n?|\n)/gm, "");
+            if (!html.toLocaleLowerCase().includes("not available")
+                && !html.toLocaleLowerCase().includes("no delivery")) {
+                result.push(daystr + html);
             }
         }
-    } catch (e) {
-        console.log(e);
-        return [];
-    }
+        result = [...new Set(result)];
+    })
     return result;
 }
 
 function AmazonPrettyMessage(slots) {
-    return "";
+    return slots.join(",");
 }
 
 const Module = {
@@ -108,7 +111,7 @@ const Module = {
         name: 'AmazonWholeFoods',
         proccesor: processAmazonWholeFoods,
         availableSlots: AmazonAvailableDays,
-        prettyMessageFromSlots: AmazonAvailableDays,
+        prettyMessageFromSlots: AmazonPrettyMessage,
         FoundState: false,
         monitorSetting: "monitorAmazonWholeFoods",
     }

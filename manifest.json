@@ -27,6 +27,8 @@
   ],
   "background": {
     "scripts": [
+      "js/jquery-3.4.1.slim.min.js",
+      "js/cheerio.js",
       "Modules.js",
       "background.js"
     ],
