@@ -1,0 +1,43 @@
+{
+  "name": "Keep Calm Shopping",
+  "version": "1.1.3",
+  "description": "Online Shopping Slot Finder",
+  "permissions": [
+    "webRequest",
+    "declarativeContent",
+    "storage",
+    "*://*.amazon.com/",
+    "*://*.costco.com/",
+    "*://covid-19.direct/",
+    "https://us-central1-covid-19-live.cloudfunctions.net/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*",
+        "*://sameday.costco.com/*"
+      ],
+      "js": [
+        "js/jquery-3.4.1.slim.min.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "browser_action": {
+    "default_title": "Slot Finder",
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 2
+}
