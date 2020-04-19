@@ -75,7 +75,7 @@ class AmazonWholeFoods extends ModuleType {
         return result;
     }
     prettyMessageFromSlots(slots) {
-        return `Check Whole Foods -  ${availdays.length} slots: ` + slots.join(",");
+        return `Check Whole Foods -  ${slots.length} slots: ` + slots.join(",");
     }
 
 }
@@ -115,7 +115,7 @@ class Costco extends ModuleType {
         return result;
     }
     prettyMessageFromSlots(slots) {
-        return `Check Costco -  ${availdays.length} slots: ` + slots.map(d => d.date).join(", ");
+        return `Check Costco -  ${slots.length} slots: ` + slots.map(d => d.date).join(", ");
     }
 
 }
