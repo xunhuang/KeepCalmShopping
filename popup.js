@@ -3,6 +3,7 @@ $(document).ready(() => {
     $("#monitorCostcoSwitch").prop("checked", result.monitorCostco);
     $("#monitorAmazonWholeFoodsSwitch").prop("checked", result.monitorAmazonWholeFoods);
     $("#monitorAmazonFreshSwitch").prop("checked", result.monitorAmazonFresh);
+    $("#monitorSayWeeeSwitch").prop("checked", result.monitorSayWeee);
     $("#userPhone").val(result.userPhone);
   });
 
