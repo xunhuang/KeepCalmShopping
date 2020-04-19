@@ -21,6 +21,11 @@ $(document).ready(() => {
       monitorAmazonWholeFoods: $("#monitorAmazonWholeFoodsSwitch").prop("checked")
     });
   });
+  $("#monitorSayWeeeSwitch").change(event => {
+    chrome.storage.sync.set({
+      monitorSayWeee: $("#monitorSayWeeeSwitch").prop("checked")
+    });
+  });
   $("#monitorAmazonFreshSwitch").change(event => {
     chrome.storage.sync.set({
       monitorAmazonFresh: $("#monitorAmazonFreshSwitch").prop("checked")

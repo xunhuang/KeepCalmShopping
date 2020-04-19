@@ -9,12 +9,15 @@
     "*://*.amazon.com/",
     "*://*.costco.com/",
     "*://covid-19.direct/",
+    "*://www.sayweee.com/",
     "https://us-central1-covid-19-live.cloudfunctions.net/"
   ],
   "content_scripts": [
     {
       "matches": [
         "*://*.amazon.com/*",
+        "*://*.amazon.com/*",
+        "*://*.sayweee.com/*",
         "*://sameday.costco.com/*"
       ],
       "js": [

@@ -20,6 +20,10 @@ function whichModule(url) {
     if (url.startsWith("https://www.amazon.com/gp/buy/shipoptionselect/handlers/display.html")) {
         return Module.AmazonWholeFoods;
     }
+    if (url.startsWith("https://www.sayweee.com")) {
+        return Module.SayWeee;
+    }
+
     return null;
 }
 
@@ -29,16 +33,14 @@ class ModuleType {
     }
     name() { throw "no implemented" }
     monitorSetting() { throw "no implemented" }
-    // FoundState() { throw "no implemented" }
     async proccesor() { throw "no implemented" }
     availableSlots() { throw "no implemented" }
     prettyMessageFromSlots() { throw "no implemented" }
 };
-class AmazonWholeFoods extends ModuleType {
 
+class AmazonWholeFoods extends ModuleType {
     name() { return "AmazonWholeFoods" }
     monitorSetting() { return "monitorAmazonWholeFoods" }
-
     async proccesor() {
         let result;
         console.log('Checking Whole Foods');
@@ -73,8 +75,7 @@ class AmazonWholeFoods extends ModuleType {
         return result;
     }
     prettyMessageFromSlots(slots) {
-
-        return slots.join(",");
+        return `Check Whole Foods -  ${availdays.length} slots: ` + slots.join(",");
     }
 
 }
@@ -114,11 +115,39 @@ class Costco extends ModuleType {
         return result;
     }
     prettyMessageFromSlots(slots) {
-        return slots.map(d => d.date).join(", ");
+        return `Check Costco -  ${availdays.length} slots: ` + slots.map(d => d.date).join(", ");
+    }
+
+}
+class SayWeee extends ModuleType {
+    name() { return "SayWeee" }
+    monitorSetting() { return "monitorSayWeee" }
+    async proccesor() {
+        let result;
+        console.log('Checking SayWeee');
+        let url = "https://www.sayweee.com/shopping_list?category=green";
+        result = await getServerResults(url);
+        return result;
+
+    }
+    availableSlots(data) {
+        let result = [];
+        const $ = cheerio.load(data);
+        let entries = $(".product-media-list > div").length;
+        let disabled = $("div.product-unavailable > div.disable-cart").length;
+        if (entries > disabled + 10) {
+            result.push({ entries: entries, disabled: disabled });
+        }
+        console.log(`${entries} item listed with ${disabled} item not available`);
+        return result;
+    }
+    prettyMessageFromSlots(slots) {
+        return `SayWeee! ${slots[0].entries} item listed with ${slots[0].disabled} item not available`;
     }
 }
 
 const Module = {
     Costco: new Costco(),
     AmazonWholeFoods: new AmazonWholeFoods(),
+    SayWeee: new SayWeee(),
 }
