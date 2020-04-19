@@ -7,11 +7,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         CostcoDeliveryURL: details.url
       });
     }
-    if (details.url.includes("https://www.amazon.com/gp/buy/shipoptionselect/handlers/display.html")) {
-      chrome.storage.sync.set({
-        AmazonWholeFoodsDeliveryURL: details.url
-      });
-    }
     return {
       requestHeaders: details.requestHeaders
     };
@@ -39,11 +34,11 @@ chrome.runtime.onMessage.addListener(
   async function (request, sender, sendResponse) {
     let module = Module[request.module];
     if (module) {
-      console.log(module);
+      // console.log(module);
       if (request.command == "monitor") {
-        let monitorSetting = await getOptionFromStorage(module.monitorSetting);
+        let monitorSetting = await getOptionFromStorage(module.monitorSetting());
         if (!monitorSetting) {
-          console.log(`Monitor ${module.name} is off.`)
+          console.log(`Monitor ${module.name()} is off.`)
           return;
         }
         let found = false;
@@ -59,20 +54,20 @@ chrome.runtime.onMessage.addListener(
         if (found !== module.FoundState) {
           if (found) {
             let dates = module.prettyMessageFromSlots(availdays);
-            sendNotification(`Check ${module.name} ${availdays.length} slots. ` + dates);
+            sendNotification(`Check ${module.name()} ${availdays.length} slots. ` + dates);
           } else {
-            sendNotification(`${module.name} slots are gone!`);
+            sendNotification(`${module.name()} slots are gone!`);
           }
           module.FoundState = found;
         }
       } else if (request.command == "reset") {
-        let monitorSetting = await getOptionFromStorage(module.monitorSetting);
+        let monitorSetting = await getOptionFromStorage(module.monitorSetting());
         if (monitorSetting) {
-          console.log(`${module.name} monitoring has started!`);
-          sendNotification(`${module.name} monitoring has started.`);
+          console.log(`${module.name()} monitoring has started!`);
+          sendNotification(`${module.name()} monitoring has started.`);
         } else {
-          console.log(`${module.name} monitoring turned off!`);
-          sendNotification(`${module.name} monitoring is turned off.`);
+          console.log(`${module.name()} monitoring turned off!`);
+          sendNotification(`${module.name()} monitoring is turned off.`);
         }
         module.FoundState = false;
       }
