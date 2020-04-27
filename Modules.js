@@ -23,7 +23,6 @@ function whichModule(url) {
   if (url.startsWith("https://www.sayweee.com")) {
     return Module.SayWeee;
   }
-
   return null;
 }
 
@@ -38,8 +37,13 @@ class ModuleType {
   prettyMessageFromSlots() { throw "no implemented" }
 };
 
+function cleanText(text) {
+  return text.replace(/  +/g, ' ')
+    .replace(/^\s*$(?:\r\n?|\n)/gm, "");
+}
+
 class AmazonWholeFoods extends ModuleType {
-  name() { return "AmazonWholeFoods" }
+  name() { return "Amazon" }
   monitorSetting() { return "monitorAmazonWholeFoods" }
   async proccesor() {
     let result;
@@ -52,9 +56,21 @@ class AmazonWholeFoods extends ModuleType {
     let result = [];
     const $ = cheerio.load(data);
     let days = $("div.ufss-slotselect");
+    console.log(days);
+
+    let freshslots = $("#daySelector .a-list-item .a-list-item ");
+    let slots = [];
+    freshslots.map(s => slots.push(freshslots[s]));
+    for (let slot of slots) {
+      console.log(cleanText($(slot).text()));
+      let text = cleanText($(slot).text());
+      if (!text.toLocaleLowerCase().includes("not available")) {
+        result.push({ type: "fresh", text: text });
+      }
+    }
+
     days.map(s => {
       let day = days[s];
-      let daystr = day.attribs.id;
       let slots = [];
       let slots1 = cheerio(day, ".ufss-available");
       slots1.map(s => slots.push(slots1[s]));
@@ -63,11 +79,10 @@ class AmazonWholeFoods extends ModuleType {
 
       for (let slot of slots) {
         let html = cheerio(slot).text();
-        html = html.replace(/  +/g, ' ')
-          .replace(/^\s*$(?:\r\n?|\n)/gm, "");
-        if (!html.toLocaleLowerCase().includes("not available")
-          && !html.toLocaleLowerCase().includes("no delivery")) {
-          result.push(daystr + html);
+        let text = cleanText(html);
+        if (!text.toLocaleLowerCase().includes("not available")
+          && !text.toLocaleLowerCase().includes("no delivery")) {
+          result.push({ type: "wholefoods", text: text });
         }
       }
       result = [...new Set(result)];
@@ -75,7 +90,11 @@ class AmazonWholeFoods extends ModuleType {
     return result;
   }
   prettyMessageFromSlots(slots) {
-    return `Check Whole Foods -  ${slots.length} slots: ` + slots.join(",");
+    let entity = "Amazon";
+    if (slots.length > 0) {
+      entity = slots[0].type === "fresh" ? "Amazon Fresh" : "Amazon Whole Foods";
+    }
+    return `Check ${entity} -  ${slots.length} slots: ` + slots.map(s => s.text).join(",");
   }
 
 }
